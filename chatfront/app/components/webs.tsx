@@ -1,13 +1,15 @@
-import { View, Text } from "react-native";
+import { View, Text , Button, TextInput} from "react-native";
 import React, { useEffect, useState } from "react";
 
 export default function Webs() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [serverMessage, setServerMessage] = useState("");
+  const [ws, setWS] = useState<WebSocket | null>(null);
+  const [inputMessage, setInputMessage] = useState<string>(""); // State for input text
 
   useEffect(() => {
-    const ws = new WebSocket("ws://127.0.0.1:8000/events");
-
+    const ws = new WebSocket("ws://127.0.0.1:8000/echo");
+    setWS(ws);
     ws.onopen = () => {
       console.log("WebSocket connection opened");
       // to send message you can use like that :   ws.send("Hello, server!"); 
@@ -33,7 +35,20 @@ export default function Webs() {
     return () => {
       ws.close();
     };
+
+
+
   }, []);
+
+  const sendMessage = () => {
+    if (ws && isConnected) {
+      ws.send(inputMessage);
+      console.log("Message sent:", inputMessage);
+      setInputMessage(""); // Clear the input field after sending
+    } else {
+      console.log("WebSocket is not connected. Unable to send message.");
+    }
+  };
 
   return (
     <View>
@@ -45,6 +60,21 @@ export default function Webs() {
       ) : (
         <Text style={{ color: "gray" }}>No message from server yet</Text>
       )}
+       <TextInput
+        style={{
+          height: 40,
+          borderColor: "gray",
+          borderWidth: 1,
+          marginVertical: 10,
+          paddingHorizontal: 8,
+          color: "blue",
+        }}
+        placeholder="Enter your message"
+        placeholderTextColor="gray"
+        value={inputMessage}
+        onChangeText={setInputMessage}
+      />
+       <Button title="Send Message" onPress={sendMessage} />
     </View>
   );
 }
