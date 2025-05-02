@@ -159,6 +159,7 @@ dependencies = [
  "rocket",
  "rocket_ws",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -8,6 +8,7 @@ use rocket::tokio::select;
 use ws::{WebSocket, Stream};
 use async_stream::stream; // For creating asynchronous streams
 use futures::stream::Stream; // For working with streams
+use serde_json::json;
 
 #[derive(Debug, Clone, FromForm, Serialize, Deserialize)]
 #[cfg_attr(test, derive(PartialEq, UriDisplayQuery))]
@@ -21,20 +22,21 @@ struct Message {
 }
 
 // Websocket clarification
-#[get("/echo")]
+#[get("/api/echo")]
 fn echo_compose(ws: WebSocket) -> Stream!['static] {
     ws.stream(|io| io)
 }
 
 
 // Websocket clarification
-#[get("/echostream")]
-async fn echo_stream(ws: WebSocket,queue: &State<Sender<Message>>, mut end: Shutdown) -> Stream!['static]  {
+#[get("/api/sse")]
+async fn echo_stream(ws: WebSocket,queue: &State<Sender<Message>>, mut end: Shutdown) -> EventStream![] {
     let mut rx = queue.subscribe();
     // Create a stream that emits messages from the queue
+    /*
     let stream = async_stream::stream! {
         loop {
-            let msg = tokio::select! {
+            let msg = select! {
                 msg = rx.recv() => match msg {
                     Ok(msg) => msg, // Received a message from the queue
                     Err(RecvError::Closed) => break, // Exit the loop if the queue is closed
@@ -42,21 +44,34 @@ async fn echo_stream(ws: WebSocket,queue: &State<Sender<Message>>, mut end: Shut
                 },
                 _ = &mut end => break, // Exit the loop if the shutdown signal is received
             };
-            yield Message::Text(msg); // Yield the message as a WebSocket text message
+            yield msg; // Yield the message as a WebSocket text message
         }
     };
-
-    ws.stream(stream)
+    */
+     EventStream! {
+        loop {
+            let msg = select! {
+                msg = rx.recv() => match msg {
+                    Ok(msg) => msg,
+                    Err(RecvError::Closed) => break,
+                    Err(RecvError::Lagged(_)) => continue,
+                },
+                _ = &mut end => break,
+            };
+            yield Event::json(&msg);
+        }
+    }
+   // ws.stream(|stream| stream)
 }
 
 
-#[post("/message", data = "<form>")]
+#[post("/api/message", data = "<form>")]
 fn post(form: Form<Message>, queue: &State<Sender<Message>>) {
     // A send 'fails' if there are no active subscribers. That's okay.
     let _res = queue.send(form.into_inner());
 }
 
-#[get("/events")]
+#[get("/api/events")]
 async fn events(queue: &State<Sender<Message>>, mut end: Shutdown) -> EventStream![] {
     let mut rx = queue.subscribe();
     EventStream! {
@@ -76,6 +91,7 @@ async fn events(queue: &State<Sender<Message>>, mut end: Shutdown) -> EventStrea
 
 #[launch]
 fn rocket() -> _ {
+    
     rocket::build()
         .manage(channel::<Message>(1024).0)
         .mount("/", routes![post, events,echo_compose,echo_stream])

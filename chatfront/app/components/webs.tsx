@@ -1,5 +1,6 @@
 import { View, Text , Button, TextInput} from "react-native";
 import React, { useEffect, useState } from "react";
+import EventSource from "react-native-sse";
 
 export default function Webs() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -7,48 +8,40 @@ export default function Webs() {
   const [ws, setWS] = useState<WebSocket | null>(null);
   const [inputMessage, setInputMessage] = useState<string>(""); // State for input text
 
-  useEffect(() => {
-    const ws = new WebSocket("ws://127.0.0.1:8000/echo");
-    setWS(ws);
-    ws.onopen = () => {
-      console.log("WebSocket connection opened");
-      // to send message you can use like that :   ws.send("Hello, server!"); 
-      setIsConnected(true); // Update state to reflect successful connection
-    };
-
-    ws.onmessage = (e) => {
-      console.log("Message from server:", e.data);
-      setServerMessage(e?.data); // Store the server message
-    };
-
-    ws.onerror = (e) => {
-      console.log("WebSocket error:", e);
-      setIsConnected(false); // Update state if there is an error
-    };
-
-    ws.onclose = (e) => {
-      console.log("WebSocket connection closed:", e.code, e.reason);
-      setIsConnected(false); // Update state if the connection closes
-    };
-
-    // Clean up WebSocket connection when the component unmounts
-    return () => {
-      ws.close();
-    };
+  //const es = new EventSource("http://localhost:8000/events");
+  let url = "http://localhost/api/events";
+  const es = new EventSource(url, {
+    headers: {
+      "Content-Type": "application/json",
+      //Authorization: `Bearer ${OPENAI_KEY}`,
+    },
+   // method: "GET",
+    //body: JSON.stringify(data),
+    pollingInterval: 3000,
+  });
 
 
+  es.addEventListener("open", (event) => {
+    console.log("Open SSE connection.");
 
-  }, []);
-
-  const sendMessage = () => {
-    if (ws && isConnected) {
-      ws.send(inputMessage);
-      console.log("Message sent:", inputMessage);
-      setInputMessage(""); // Clear the input field after sending
-    } else {
-      console.log("WebSocket is not connected. Unable to send message.");
+  });
+  
+  es.addEventListener("message", (event) => {
+    console.log("New message event:", event.data);
+    setServerMessage(event.data.toString());
+  });
+  
+  es.addEventListener("error", (event) => {
+    if (event.type === "error") {
+      console.error("Connection error:", event.message);
+    } else if (event.type === "exception") {
+      console.error("Error:", event.message, event.error);
     }
-  };
+  });
+  
+  es.addEventListener("close", (event) => {
+    console.log("Close SSE connection.");
+  });
 
   return (
     <View>
@@ -74,7 +67,7 @@ export default function Webs() {
         value={inputMessage}
         onChangeText={setInputMessage}
       />
-       <Button title="Send Message" onPress={sendMessage} />
+
     </View>
   );
 }
