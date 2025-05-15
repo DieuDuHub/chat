@@ -1,0 +1,22 @@
+@startuml
+actor User
+participant "React Native App" as Frontend
+participant "Nginx Proxy" as Nginx
+participant "Rocket Backend" as Backend
+
+User -> Frontend: Sends message via WebPost
+Frontend -> Nginx: POST /api/message
+Nginx -> Backend: POST /api/message
+Backend -> Backend: Process message
+Backend -> Backend: Broadcast message to subscribers
+Backend -> Nginx: Response (200 OK)
+Nginx -> Frontend: Response (200 OK)
+
+User -> Frontend: Connects to SSE via Webs
+Frontend -> Nginx: GET /api/events
+Nginx -> Backend: GET /api/events
+Backend -> Backend: Subscribe to message queue
+Backend -> Nginx: Stream messages
+Nginx -> Frontend: Stream messages
+Frontend -> User: Display messages
+@enduml

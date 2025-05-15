@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="Chat Application Architecture" id="id-chat-architecture" version="5.0.0">
+  <folder name="Business" id="id-business-folder" type="business">
+    <element xsi:type="archimate:BusinessActor" name="User" id="id-user"/>
+  </folder>
+  <folder name="Application" id="id-application-folder" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="React Native Frontend" id="id-frontend"/>
+    <element xsi:type="archimate:ApplicationComponent" name="NGINX Routing Server" id="id-nginx"/>
+    <element xsi:type="archimate:ApplicationComponent" name="RUST Events Server based on Rocket" id="id-backend"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="id-technology-folder" type="technology">
+    <element xsi:type="archimate:TechnologyCollaboration" name="Server Infrastructure" id="id-server"/>
+  </folder>
+  <folder name="Relations" id="id-relations-folder" type="relations">
+    <element xsi:type="archimate:FlowRelationship" id="id-user-to-frontend" source="id-user" target="id-frontend"/>
+    <element xsi:type="archimate:FlowRelationship" id="id-frontend-to-nginx" source="id-frontend" target="id-nginx"/>
+    <element xsi:type="archimate:FlowRelationship" id="id-nginx-to-backend" source="id-nginx" target="id-backend"/>
+    <element xsi:type="archimate:FlowRelationship" id="id-backend-to-server" source="id-backend" target="id-server"/>
+  </folder>
+  <folder name="Views" id="id-views-folder" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Chat Application View" id="id-chat-view">
+      <child xsi:type="archimate:DiagramObject" id="id-diagram-user" archimateElement="id-user">
+        <bounds x="100" y="100" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-source-user-frontend" source="id-diagram-user" target="id-diagram-frontend" archimateRelationship="id-user-to-frontend"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-diagram-frontend" archimateElement="id-frontend">
+        <bounds x="300" y="100" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-source-frontend-nginx" source="id-diagram-frontend" target="id-diagram-nginx" archimateRelationship="id-frontend-to-nginx"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-diagram-nginx" archimateElement="id-nginx">
+        <bounds x="500" y="100" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-source-nginx-backend" source="id-diagram-nginx" target="id-diagram-backend" archimateRelationship="id-nginx-to-backend"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-diagram-backend" archimateElement="id-backend">
+        <bounds x="700" y="100" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-source-backend-server" source="id-diagram-backend" target="id-diagram-server" archimateRelationship="id-backend-to-server"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-diagram-server" archimateElement="id-server">
+        <bounds x="900" y="100" width="120" height="55"/>
+      </child>
+    </element>
+  </folder>
+</archimate:model>

@@ -9,16 +9,44 @@ use ws::{WebSocket, Stream};
 use async_stream::stream; // For creating asynchronous streams
 use futures::stream::Stream; // For working with streams
 use serde_json::json;
+use uuid::Uuid; // Add this for UUID generation
 
+// ARCHIMATE : RUST Events Server based on Rocket
+
+
+// Temp message for http receiver
 #[derive(Debug, Clone, FromForm, Serialize, Deserialize)]
-#[cfg_attr(test, derive(PartialEq, UriDisplayQuery))]
 #[serde(crate = "rocket::serde")]
-struct Message {
+struct MessageForm {
     #[field(validate = len(..30))]
     pub room: String,
     #[field(validate = len(..20))]
     pub username: String,
     pub message: String,
+}
+
+#[derive(Debug, Clone, FromForm, Serialize, Deserialize)]
+#[cfg_attr(test, derive(PartialEq, UriDisplayQuery))]
+#[serde(crate = "rocket::serde")]
+struct Message {
+    pub id: String, // Unique identifier for the message
+    #[field(validate = len(..30))]
+    pub room: String,
+    #[field(validate = len(..20))]
+    pub username: String,
+    pub message: String,
+}
+
+impl Message {
+    // Constructor to create a new message with a generated id
+    pub fn new(room: String, username: String, message: String) -> Self {
+        Self {
+            id: Uuid::new_v4().to_string(), // Generate a unique UUID
+            room,
+            username,
+            message,
+        }
+    }
 }
 
 // Websocket clarification
@@ -64,11 +92,28 @@ async fn echo_stream(ws: WebSocket,queue: &State<Sender<Message>>, mut end: Shut
    // ws.stream(|stream| stream)
 }
 
-
+/*
 #[post("/api/message", data = "<form>")]
-fn post(form: Form<Message>, queue: &State<Sender<Message>>) {
+fn post(form: Form<MessageForm>, queue: &State<Sender<Message>>) {
     // A send 'fails' if there are no active subscribers. That's okay.
-    let _res = queue.send(form.into_inner());
+    let message = Message::new(
+        form.room.clone(),
+        form.username.clone(),
+        form.message.clone(),
+    );
+    // A send 'fails' if there are no active subscribers. That's okay.
+    let _res = queue.send(message);
+}*/
+
+#[post("/api/message", format = "json", data = "<message>")]
+fn post(message: rocket::serde::json::Json<MessageForm>, queue: &State<Sender<Message>>) {
+    let message = Message::new(
+        message.room.clone(),
+        message.username.clone(),
+        message.message.clone(),
+    );
+    // A send 'fails' if there are no active subscribers. That's okay.
+    let _res = queue.send(message);
 }
 
 #[get("/api/events")]

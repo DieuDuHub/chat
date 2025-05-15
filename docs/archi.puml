@@ -1,0 +1,31 @@
+@startuml
+package "React Native Frontend" {
+  component Webs
+  component WebPost
+}
+package "Nginx Proxy" {
+  component Nginx
+}
+package "Rocket Backend" {
+  component "API Server" as Rocket
+  component "Message Queue" as Queue
+}
+
+actor User
+User --> WebPost : Send Message
+WebPost --> Nginx : POST /api/message
+Nginx --> Rocket : POST /api/message
+Rocket --> Queue : Add Message to Queue
+Queue --> Rocket : Broadcast Message
+Rocket --> Nginx : Response (200 OK)
+Nginx --> WebPost : Response (200 OK)
+
+User --> Webs : Connect to SSE
+Webs --> Nginx : GET /api/events
+Nginx --> Rocket : GET /api/events
+Rocket --> Queue : Subscribe to Queue
+Queue --> Rocket : Stream Messages
+Rocket --> Nginx : Stream Messages
+Nginx --> Webs : Stream Messages
+Webs --> User : Display Messages
+@enduml
