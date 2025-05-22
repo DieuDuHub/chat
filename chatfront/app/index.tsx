@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
 import Webs from "./components/webs";
 import WebPost from "./components/webpost";
+import { Heading } from "../components/ui/heading";
 
 //A ARCHIMATE : Web Site React-Native for Chat purpose using SSE
 
@@ -13,7 +14,7 @@ export default function Index() {
         alignItems: "center",
       }}
     >
-      <Text>SSE Demo page</Text>
+      <Heading>SSE Demo page</Heading>
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         <WebPost />
         <Webs />
