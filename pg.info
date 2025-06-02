@@ -1,0 +1,44 @@
+brew services start postgresql@14
+
+createuser mduser
+createdb md
+alter user mduser with encrypted password 'toto2016';
+grant all privileges on database md to mduser;
+
+CREATE table IF NOT EXISTS "public"."users" (
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+    "email" text NOT NULL,
+    "password" text NOT NULL,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
+    PRIMARY KEY ("id"),
+    UNIQUE ("email")
+);
+
+INSERT INTO "public"."users" ("email", "password")
+VALUES ('matthieu@debray.com', 'zemotdepasse');
+
+\l list db
+\c connect to db
+\dt list tables
+\di list indexes
+\df list functions
+\dv list views
+\dn list schemas
+\du list users
+\df+ list functions with details            
+\d describe table
+\di+ describe index
+\dv+ describe view
+\dn+ describe schema
+\du+ describe user
+\df+ function_name list details of a specific function
+psql -d <db-name> -U <username> -W
+
+// example
+psql -d tutorials_db -U admin -W
+The above command includes three flags:
+
+-d - specifies the name of the database to connect to
+-U - specifies the name of the user to connect as
+-W - forces psql to ask for the user password before connecting to the database

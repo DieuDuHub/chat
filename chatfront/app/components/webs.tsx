@@ -16,7 +16,7 @@ export default function Webs() {
 
   //const es = new EventSource("http://localhost:8000/events");
   useEffect(() => {
-  const  url = "http://localhost/api/events";
+  const  url = "/api/events";
   const es = new EventSource(url, {
     headers: {
       "Content-Type": "application/json",

@@ -7,7 +7,7 @@ export default function WebPost() {
 
   const sendMessage = async () => {
     try {
-      const response = await fetch("http://localhost/api/message", {
+      const response = await fetch("/api/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
