@@ -9,16 +9,13 @@ import WebPost from "./components/webpost";
 import { Heading } from "../components/ui/heading"
 import { Button, ButtonText } from "@/components/ui/button"
 //import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
-import { GluestackUIProvider } from "@gluestack-ui/themed"
-import { config } from "@gluestack-ui/config";
+
 
 //A ARCHIMATE : Web Site React-Native for Chat purpose using SSE
 import "../global.css";
 
 export default  function Index() {
   return (
-       <GluestackUIProvider mode="light">
-         <ThemeProvider value={DefaultTheme}>
     <View
       style={{
         flex: 1,
@@ -26,16 +23,14 @@ export default  function Index() {
         alignItems: "center",
       }}
     >
-      <Heading className="mt-4">SSE Demo page</Heading>
+      <Heading className="mt: 4">SSE Demo page</Heading>
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         <WebPost />
         <Webs />
-            <Button size="md" variant="solid" action="primary">
+            <Button size="md" variant="outline" action="primary">
       <ButtonText>Hello World!</ButtonText>
     </Button>
       </View>
     </View>
-    </ThemeProvider>
-    </GluestackUIProvider>
   );
 }

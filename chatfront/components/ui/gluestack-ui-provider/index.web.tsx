@@ -5,8 +5,7 @@ import { OverlayProvider } from '@gluestack-ui/overlay';
 import { ToastProvider } from '@gluestack-ui/toast';
 import { setFlushStyles } from '@gluestack-ui/nativewind-utils/flush';
 import { script } from './script';
-
-export type ModeType = 'light' | 'dark' | 'system';
+import { ModeType } from './types';
 
 const variableStyleTagId = 'nativewind-style';
 const createStyle = (styleTagId: string) => {
