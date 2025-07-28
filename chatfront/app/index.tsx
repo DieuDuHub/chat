@@ -14,24 +14,22 @@ import { Button, ButtonText } from "@/components/ui/button"
 //A ARCHIMATE : Web Site React-Native for Chat purpose using SSE
 import "../global.css";
 
-export default  function Index() {
+export default function Index() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Heading className="mt: 4">SSE Demo page</Heading>
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+    <View className="flex-1 flex-col items-center justify-center w-full min-h-screen p-4 bg-white dark:bg-black">
+      <Heading className="mt-4 mb-8 text-center text-2xl md:text-4xl">SSE Demo page</Heading>
+      <View className="w-full max-w-2xl flex flex-col gap-6 items-center">
         <WebPost />
         <Webs />
+<<<<<<< HEAD
             <Button size="md" variant="outline" action="primary">
       <ButtonText>Hello World!</ButtonText>
 
       
     </Button>
+=======
+  
+>>>>>>> 08148ee2872eb3237b3146e941a7c825b08f41f3
       </View>
     </View>
   );
