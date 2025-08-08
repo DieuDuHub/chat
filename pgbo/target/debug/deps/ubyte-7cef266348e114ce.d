@@ -1,0 +1,11 @@
+/Users/matthieudebray/dev/rust/chat/pgbo/target/debug/deps/ubyte-7cef266348e114ce.d: /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/lib.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/arithmetic.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/byte_unit.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/parse.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/ser_de.rs
+
+/Users/matthieudebray/dev/rust/chat/pgbo/target/debug/deps/libubyte-7cef266348e114ce.rlib: /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/lib.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/arithmetic.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/byte_unit.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/parse.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/ser_de.rs
+
+/Users/matthieudebray/dev/rust/chat/pgbo/target/debug/deps/libubyte-7cef266348e114ce.rmeta: /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/lib.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/arithmetic.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/byte_unit.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/parse.rs /Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/ser_de.rs
+
+/Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/lib.rs:
+/Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/arithmetic.rs:
+/Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/byte_unit.rs:
+/Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/parse.rs:
+/Users/matthieudebray/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ubyte-0.10.4/src/ser_de.rs:
