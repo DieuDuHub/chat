@@ -1,0 +1,72 @@
+@startuml
+!theme plain
+title Rust Application - Rocket with PostgreSQL
+
+actor Client as C
+participant "Rocket Server" as RS
+participant "Database Handler" as DH
+database PostgreSQL as DB
+
+== Server Startup ==
+note over RS: rocket::build()\n.mount("/", routes![index,ping])
+
+== Endpoint /ping ==
+C -> RS: GET /ping
+activate RS
+RS -> C: "alive"
+deactivate RS
+
+== Endpoint /test ==
+C -> RS: GET /test
+activate RS
+RS -> DH: db_connectivity_test()
+activate DH
+
+== Database Connection ==
+DH -> DB: tokio_postgres::connect("host=localhost dbname=md")
+activate DB
+DB -> DH: (client, connection)
+deactivate DB
+
+note over DH: Spawn connection task\ntokio::spawn(connection.await)
+
+== Table Creation ==
+DH -> DB: CREATE TABLE IF NOT EXISTS person\n(id SERIAL PRIMARY KEY,\nname TEXT NOT NULL,\ndata BYTEA)
+activate DB
+DB -> DH: Ok() or Error
+deactivate DB
+
+== Data Insertion ==
+DH -> DB: INSERT INTO person (name, data)\nVALUES ('Ferris', NULL)
+activate DB
+DB -> DH: Ok() or Error
+deactivate DB
+
+== Data Query ==
+DH -> DB: SELECT id, name, data FROM person
+activate DB
+DB -> DH: Vec<Row>
+deactivate DB
+
+loop for each row
+    note over DH: println!("found person: {} {} {:?}",\nid, name, data)
+end
+
+note over DH: connection_handle.abort()
+
+DH -> RS: Ok() or Err(e)
+deactivate DH
+
+alt success
+    RS -> C: "Database connectivity test passed"
+else failure
+    note over RS: eprintln!("Database connectivity test failed: {}", e)
+    RS -> C: "Database connectivity test failed"
+end
+
+deactivate RS
+
+== Tests ==
+note over RS: #[cfg(test)]\ntest_db_connectivity()\n- Client::tracked(rocket())\n- GET /test\n- assert Status::Ok\n- assert response body
+
+@enduml

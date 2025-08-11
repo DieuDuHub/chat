@@ -1,0 +1,79 @@
+@startuml infrastructure
+!theme plain
+title Infrastructure Schema - Chat Application
+
+skinparam backgroundColor #FAFAFA
+skinparam componentStyle rectangle
+
+package "Client Layer" {
+    [Mobile App\n(React Native)] as MobileApp
+    [Web App\n(React)] as WebApp
+    note right of MobileApp : Expo/React Native\nTailwind CSS\nGluestack UI
+    note right of WebApp : React\nTailwind CSS
+}
+
+package "Load Balancer / Reverse Proxy" {
+    [Nginx] as Nginx
+    note right of Nginx : Load balancing\nSSL termination\nStatic files serving
+}
+
+package "Application Layer" {
+    [Rust Backend\n(Rocket)] as RustApp
+    [Chat Service\n(SSE)] as ChatService
+    note right of RustApp : Rocket framework\nAsynchronous handlers\nRESTful API
+    note right of ChatService : Server-Sent Events\nReal-time messaging
+}
+
+package "Database Layer" {
+    component "PostgreSQL 14" as PostgresDB
+    note right of PostgresDB : Persistent storage\nACID compliance\nJSON support
+    
+    component "users table" as UsersTable
+    component "messages table" as MessagesTable  
+    component "chat_rooms table" as ChatRoomsTable
+}
+
+package "Message Queue (Optional)" {
+    [RabbitMQ/Redis] as MessageQueue
+    note right of MessageQueue : Message broker\nReal-time notifications\nPub/Sub pattern
+}
+
+package "Monitoring & Logging" {
+    [Logs] as Logging
+    [Metrics] as Monitoring
+    note right of Logging : Application logs\nError tracking\nRequest tracing
+    note right of Monitoring : Performance metrics\nHealth checks\nAlerts
+}
+
+' Client connections
+MobileApp --> Nginx : HTTPS
+WebApp --> Nginx : HTTPS
+
+' Nginx to backend
+Nginx --> RustApp : HTTP/1.1
+Nginx --> ChatService : WebSocket/SSE
+
+' Backend to database
+RustApp --> PostgresDB : TCP:5432\n(tokio-postgres)
+ChatService --> PostgresDB : TCP:5432
+
+' Database table relations
+PostgresDB --> UsersTable : contains
+PostgresDB --> MessagesTable : contains
+PostgresDB --> ChatRoomsTable : contains
+MessagesTable --> UsersTable : user_id FK
+
+' Optional message queue
+RustApp --> MessageQueue : AMQP/Redis Protocol
+ChatService --> MessageQueue : AMQP/Redis Protocol
+
+' Monitoring connections
+RustApp --> Logging : Log events
+RustApp --> Monitoring : Metrics
+ChatService --> Logging : Log events
+ChatService --> Monitoring : Metrics
+
+' Database relations - remove the self-reference
+' Foreign key relationships are now shown above
+
+@enduml

@@ -1,0 +1,91 @@
+@startuml network
+!theme plain
+title Network Architecture - Chat Application
+
+skinparam backgroundColor #FAFAFA
+
+package "DMZ (Demilitarized Zone)" {
+    node "Load Balancer" as LoadBalancer {
+        component "Nginx" as Nginx
+        interface "Public IP" as PublicIP
+        
+        PublicIP --> Nginx
+    }
+}
+
+package "Application Tier" {
+    node "App Server 1" as AppServer1 {
+        component "Rust App\nInstance 1" as RustApp1
+        interface "10.0.1.10:8000" as AppIP1
+    }
+    
+    node "App Server 2" as AppServer2 {
+        component "Rust App\nInstance 2" as RustApp2
+        interface "10.0.1.11:8000" as AppIP2
+    }
+}
+
+package "Database Tier" {
+    node "Primary DB" as PrimaryDB {
+        database "PostgreSQL\nPrimary" as PGPrimary
+        interface "10.0.2.10:5432" as PGIP1
+    }
+    
+    node "Replica DB" as ReplicaDB {
+        database "PostgreSQL\nRead Replica" as PGReplica
+        interface "10.0.2.11:5432" as PGIP2
+    }
+}
+
+package "Cache/Message Layer" {
+    node "Cache Server" as CacheServer {
+        component "Redis/RabbitMQ" as Cache
+        interface "10.0.3.10:6379" as CacheIP
+    }
+}
+
+package "Monitoring" {
+    node "Monitoring Server" as MonitoringServer {
+        component "Prometheus\nGrafana\nELK Stack" as MonitoringELK
+        interface "10.0.4.10" as MonitoringIP
+    }
+}
+
+' External connections
+cloud "Internet" as Internet
+Internet --> PublicIP : HTTPS (443)\nHTTP (80)
+
+' Load balancer to app servers
+Nginx --> AppIP1 : HTTP (8000)\nHealth checks
+Nginx --> AppIP2 : HTTP (8000)\nHealth checks
+
+' App servers to database
+RustApp1 --> PGIP1 : PostgreSQL (5432)\nWrite operations
+RustApp1 --> PGIP2 : PostgreSQL (5432)\nRead operations
+RustApp2 --> PGIP1 : PostgreSQL (5432)\nWrite operations  
+RustApp2 --> PGIP2 : PostgreSQL (5432)\nRead operations
+
+' Database replication
+PGPrimary --> PGReplica : Streaming replication\nPort 5432
+
+' Cache connections
+RustApp1 --> CacheIP : Redis (6379)\nRabbitMQ (5672)
+RustApp2 --> CacheIP : Redis (6379)\nRabbitMQ (5672)
+
+' Monitoring connections
+RustApp1 --> MonitoringIP : Metrics export\nLogs shipping
+RustApp2 --> MonitoringIP : Metrics export\nLogs shipping
+PGPrimary --> MonitoringIP : DB metrics
+PGReplica --> MonitoringIP : DB metrics
+Nginx --> MonitoringIP : Access logs\nMetrics
+
+' Security annotations
+note right of PublicIP : Firewall rules:\n- Allow 80, 443\n- DDoS protection\n- SSL certificates
+note right of AppIP1 : Internal network:\n- Only accessible from LB\n- Application firewall
+note right of PGIP1 : Database security:\n- VPC private subnet\n- Encryption at rest\n- Connection encryption
+note right of MonitoringIP : Monitoring access:\n- VPN required\n- Admin access only
+
+' Network segments - Remove conflicting rectangles
+' The nodes are already organized in packages which serve as network segments
+
+@enduml

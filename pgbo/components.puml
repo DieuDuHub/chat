@@ -1,0 +1,54 @@
+@startuml components
+!theme plain
+title Component Structure - Rust Application
+
+package "Rocket Web Framework" {
+    [rocket::build()] as RocketBuilder
+    [Routes Handler] as Routes
+    component "/ping endpoint" as PingEndpoint {
+        note right: Returns "alive"
+    }
+    component "/test endpoint" as TestEndpoint {
+        note right: Calls db_connectivity_test()
+    }
+}
+
+package "Database Layer" {
+    [db_connectivity_test()] as DBTest
+    [tokio_postgres Client] as PGClient
+    [Connection Handler] as ConnHandler
+}
+
+package "PostgreSQL Database" {
+    component "md database" as MDDB
+    component "person table" as PersonTable
+    note right of PersonTable : id: SERIAL PRIMARY KEY\nname: TEXT NOT NULL\ndata: BYTEA
+}
+
+package "Testing" {
+    [Cargo Test] as CargoTest
+    [test_db_connectivity] as DBTestFunc
+    [rocket::local::blocking::Client] as TestClient
+}
+
+' Relations
+RocketBuilder --> Routes
+Routes --> PingEndpoint
+Routes --> TestEndpoint
+TestEndpoint --> DBTest
+DBTest --> PGClient
+DBTest --> ConnHandler
+PGClient --> MDDB
+ConnHandler --> MDDB
+MDDB --> PersonTable
+
+' Test relations
+CargoTest --> DBTestFunc
+DBTestFunc --> TestClient
+TestClient --> TestEndpoint
+
+' Notes
+note right of DBTest : - Create person table\n- Insert "Ferris"\n- Read all data\n- Close connection
+note right of ConnHandler : tokio::spawn to\nhandle async connection
+
+@enduml

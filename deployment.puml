@@ -1,0 +1,100 @@
+@startuml deployment
+!theme plain
+title Deployment Architecture - Chat Application
+
+skinparam backgroundColor #FAFAFA
+
+node "Client Devices" {
+    artifact "Mobile App\n(iOS/Android)" as MobileClient
+    artifact "Web Browser" as WebClient
+}
+
+cloud "Internet" {
+    interface HTTPS
+    interface WebSocket
+}
+
+node "Load Balancer / CDN" {
+    component "Nginx\nReverse Proxy" as Nginx {
+        port "443 (HTTPS)" as HTTPS_PORT
+        port "80 (HTTP)" as HTTP_PORT
+    }
+    artifact "Static Assets\n(CSS, JS, Images)" as StaticFiles
+}
+
+node "Application Server" {
+    component "Rust Application" as RustApp {
+        port "8000 (Rocket)" as ROCKET_PORT
+        component "API Handlers" as APIHandlers
+        component "SSE Handler" as SSEHandler
+        component "Authentication" as Auth
+        component "Business Logic" as BusinessLogic
+    }
+    
+    artifact "Application Binary\n(Cargo build)" as AppBinary
+    artifact "Configuration\n(Rocket.toml)" as Config
+}
+
+node "Database Server" {
+    database "PostgreSQL 14" as PostgresDB {
+        port "5432" as PG_PORT
+        storage "Data Files" as DataFiles
+        storage "WAL Logs" as WALLogs
+        storage "Config Files" as PGConfig
+    }
+}
+
+node "Message Broker (Optional)" {
+    component "RabbitMQ/Redis" as MessageBroker {
+        port "5672 (AMQP)" as AMQP_PORT
+        port "6379 (Redis)" as REDIS_PORT
+    }
+}
+
+node "Monitoring Stack" {
+    component "Log Aggregation\n(ELK/Loki)" as LogSystem
+    component "Metrics\n(Prometheus)" as MetricsSystem
+    component "Alerting\n(Grafana)" as AlertSystem
+}
+
+' Client connections
+MobileClient --> HTTPS : Mobile API calls
+WebClient --> HTTPS : Web requests
+WebClient --> WebSocket : SSE connection
+
+' Load balancer
+HTTPS --> Nginx
+WebSocket --> Nginx
+Nginx --> StaticFiles : Serve static content
+
+' Application layer
+Nginx --> RustApp : Proxy requests\nPort 8000
+RustApp --> AppBinary : Execute
+RustApp --> Config : Load settings
+
+' Database connections
+RustApp --> PostgresDB : tokio-postgres\nPool connections
+PostgresDB --> DataFiles : Read/Write
+PostgresDB --> WALLogs : Transaction logs
+
+' Message broker
+RustApp --> MessageBroker : Publish/Subscribe
+MessageBroker --> RustApp : Message delivery
+
+' Monitoring
+RustApp --> LogSystem : Application logs
+RustApp --> MetricsSystem : Performance metrics
+PostgresDB --> MetricsSystem : DB metrics
+MetricsSystem --> AlertSystem : Visualize metrics
+
+' Internal app components
+APIHandlers --> Auth : Validate requests
+APIHandlers --> BusinessLogic : Process business rules
+SSEHandler --> BusinessLogic : Real-time events
+BusinessLogic --> PostgresDB : Data operations
+
+note right of RustApp : Runtime: Tokio async\nFramework: Rocket\nLanguage: Rust
+note right of PostgresDB : Version: 14+\nConnection pooling\nACID transactions
+note right of Nginx : SSL termination\nLoad balancing\nCompression\nCaching
+
+@enduml
