@@ -1,11 +1,11 @@
 use rocket::local::blocking::Client;
 use rocket::http::Status;
-use crate::database::{db_connectivity_test, load_sql_config};
-use crate::rocket;
+use crate::database::{db_connectivity_test, load_sql_config, create_client};
+use crate::rocket_for_tests;
 
 #[test]
 fn test_db_connectivity() {
-    let client = Client::tracked(rocket()).expect("valid rocket instance");
+    let client = Client::tracked(rocket_for_tests()).expect("valid rocket instance");
     let response = client.get("/test").dispatch();
     assert_eq!(response.status(), Status::Ok);
     let body = response.into_string().expect("valid response body");
@@ -70,9 +70,67 @@ fn test_config_loading() {
     }
 }
 
+#[tokio::test]
+async fn test_create_client_connection() {
+    // Test that create_client successfully creates a working database client
+    let result = create_client().await;
+    
+    match result {
+        Ok(client) => {
+            println!("✅ Database client created successfully");
+            
+            // Test that we can perform a simple query to verify the connection works
+            let query_result = client.query("SELECT 1 as test_value", &[]).await;
+            
+            match query_result {
+                Ok(rows) => {
+                    assert_eq!(rows.len(), 1, "Should return exactly one row");
+                    let test_value: i32 = rows[0].get(0);
+                    assert_eq!(test_value, 1, "Should return the value 1");
+                    println!("✅ Database client connection verified with test query");
+                },
+                Err(e) => {
+                    println!("❌ Database client created but test query failed: {}", e);
+                    panic!("Database client test query failed: {}", e);
+                }
+            }
+        },
+        Err(e) => {
+            println!("ℹ️ Database client creation failed (expected if DB not available): {}", e);
+            // This test is allowed to fail if database is not available
+            // but we log it for debugging purposes
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_create_client_strict() {
+    // Strict version that fails if client creation fails
+    let result = create_client().await;
+    
+    match result {
+        Ok(client) => {
+            println!("✅ Strict database client test passed");
+            
+            // Additional test: verify client can handle basic operations
+            let query_result = client.query("SELECT current_database() as db_name", &[]).await;
+            assert!(query_result.is_ok(), "Should be able to query current database name");
+            
+            if let Ok(rows) = query_result {
+                assert!(!rows.is_empty(), "Should return database name");
+                let db_name: String = rows[0].get(0);
+                println!("✅ Connected to database: {}", db_name);
+            }
+        },
+        Err(e) => {
+            panic!("❌ Strict database client creation failed: {}", e);
+        }
+    }
+}
+
 #[test]
 fn test_ping_endpoint() {
-    let client = Client::tracked(rocket()).expect("valid rocket instance");
+    let client = Client::tracked(rocket_for_tests()).expect("valid rocket instance");
     let response = client.get("/ping").dispatch();
     assert_eq!(response.status(), Status::Ok);
     let body = response.into_string().expect("valid response body");
