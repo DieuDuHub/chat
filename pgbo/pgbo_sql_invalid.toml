@@ -1,0 +1,17 @@
+# PGBO SQL Configuration - Invalid SQL for testing
+[queries]
+create_table = """
+CREATE TABLE IF NOT EXISTS person (
+    id      SERIAL PRIMARY KEY,
+    name    TEXT NOT NULL,  
+    data    BYTEA,
+    INVALID_SYNTAX_HERE
+)
+"""
+
+insert_person = "INSERT INTO nonexistent_table (name, data) VALUES ($1, $2)"
+
+select_all_persons = "SELECT * FROM another_nonexistent_table"
+
+[data]
+default_name = "Ferris"

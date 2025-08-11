@@ -1,0 +1,16 @@
+# PGBO SQL Configuration
+[queries]
+create_table_person = """
+CREATE TABLE IF NOT EXISTS person (
+    id      SERIAL PRIMARY KEY,
+    name    TEXT NOT NULL,
+    data    BYTEA
+)
+"""
+
+insert_person = "INSERT INTO person (name, data) VALUES ($1, $2)"
+
+select_all_persons = "SELECT id, name, data FROM person"
+
+[data]
+default_name = "Ferris"
