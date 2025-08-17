@@ -8,7 +8,7 @@ participant "Database Handler" as DH
 database PostgreSQL as DB
 
 == Server Startup ==
-note over RS: rocket::build()\n.mount("/", routes![index,ping])
+note over RS: rocket::build()\n.mount("/", routes![index, ping,\nget_all_person_data, get_person_data_by_id])
 
 == Endpoint /ping ==
 C -> RS: GET /ping
@@ -52,8 +52,6 @@ loop for each row
     note over DH: println!("found person: {} {} {:?}",\nid, name, data)
 end
 
-note over DH: connection_handle.abort()
-
 DH -> RS: Ok() or Err(e)
 deactivate DH
 
@@ -66,7 +64,51 @@ end
 
 deactivate RS
 
+== Endpoint /person_data ==
+C -> RS: GET /person_data
+activate RS
+RS -> DH: read_all_person_data()
+activate DH
+
+DH -> DB: create_client()
+activate DB
+DB -> DH: client
+deactivate DB
+
+DH -> DB: SELECT * FROM person_data
+activate DB
+DB -> DH: Vec<PersonData>
+deactivate DB
+
+note over DH: PersonData {\nid, first_name, last_name,\nemail, phone, birth_date,\naddress fields, etc.}
+
+DH -> RS: Json<Result<Vec<PersonData>, String>>
+deactivate DH
+RS -> C: JSON response with all person data
+deactivate RS
+
+== Endpoint /person_data/<id> ==
+C -> RS: GET /person_data/123
+activate RS
+RS -> DH: read_person_data_by_id(123)
+activate DH
+
+DH -> DB: create_client()
+activate DB
+DB -> DH: client
+deactivate DB
+
+DH -> DB: SELECT * FROM person_data WHERE id = $1
+activate DB
+DB -> DH: Option<PersonData>
+deactivate DB
+
+DH -> RS: Json<Result<Option<PersonData>, String>>
+deactivate DH
+RS -> C: JSON response with specific person data
+deactivate RS
+
 == Tests ==
-note over RS: #[cfg(test)]\ntest_db_connectivity()\n- Client::tracked(rocket())\n- GET /test\n- assert Status::Ok\n- assert response body
+note over RS: #[cfg(test)]\nComprehensive test suite:\n- test_db_connectivity()\n- test_person_data_endpoints()\n- test_person_data_by_id_endpoint()\n- test_create_client_connection()
 
 @enduml

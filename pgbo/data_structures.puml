@@ -1,0 +1,97 @@
+@startuml data_structures
+!theme plain
+title Data Structures - PersonData and API Responses
+
+package "Rust Structs" {
+    class PersonData {
+        +id: i32
+        +first_name: String
+        +last_name: String
+        +email: String
+        +phone: Option<String>
+        +birth_date: Option<NaiveDate>
+        +gender: Option<String>
+        +street_address: Option<String>
+        +city: Option<String>
+        +state_province: Option<String>
+        +postal_code: Option<String>
+        +country: Option<String>
+        +nationality: Option<String>
+        +occupation: Option<String>
+        +company: Option<String>
+        +salary: Option<f64>
+        +marital_status: Option<String>
+        +created_at: Option<DateTime<Utc>>
+        +updated_at: Option<DateTime<Utc>>
+        +is_active: Option<bool>
+    }
+
+    class SqlConfig {
+        +queries: Queries
+        +data: Data
+    }
+
+    class Queries {
+        +create_table_person: String
+        +create_table_person_data: String
+        +insert_person: String
+        +insert_person_data: String
+        +select_all_persons: String
+        +select_all_person_data: String
+        +select_person_data_by_id: String
+    }
+
+    class Data {
+        +default_name: String
+    }
+}
+
+package "API Responses" {
+    class "Json<Result<Vec<PersonData>, String>>" as AllPersonDataResponse {
+        +Ok: Vec<PersonData>
+        +Err: String
+    }
+
+    class "Json<Result<Option<PersonData>, String>>" as SinglePersonDataResponse {
+        +Ok: Option<PersonData>
+        +Err: String
+    }
+}
+
+package "PostgreSQL Tables" {
+    class person_data_table {
+        +id: SERIAL PRIMARY KEY
+        +first_name: VARCHAR(100) NOT NULL
+        +last_name: VARCHAR(100) NOT NULL
+        +email: VARCHAR(255) UNIQUE NOT NULL
+        +phone: VARCHAR(20)
+        +birth_date: DATE
+        +gender: VARCHAR(10)
+        +street_address: TEXT
+        +city: VARCHAR(100)
+        +state_province: VARCHAR(100)
+        +postal_code: VARCHAR(20)
+        +country: VARCHAR(100)
+        +nationality: VARCHAR(100)
+        +occupation: VARCHAR(100)
+        +company: VARCHAR(200)
+        +salary: DECIMAL(10,2)
+        +marital_status: VARCHAR(20)
+        +created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        +updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        +is_active: BOOLEAN DEFAULT TRUE
+    }
+}
+
+' Relations
+SqlConfig *-- Queries
+SqlConfig *-- Data
+AllPersonDataResponse *-- PersonData
+SinglePersonDataResponse *-- PersonData
+PersonData <--> person_data_table : "maps to/from"
+
+' Notes
+note right of PersonData : Serializable/Deserializable\nwith serde for JSON responses
+note bottom of person_data_table : Constraints:\n- valid_email CHECK\n- valid_birth_date CHECK\n- Email must be unique
+
+@enduml

@@ -1,0 +1,90 @@
+@startuml api_sequence
+!theme plain
+title API Sequence Diagrams - PersonData Endpoints
+
+actor Client as C
+participant "Rocket Router" as RR
+participant "API Handler" as AH
+participant "Database Module" as DM
+participant "PostgreSQL" as DB
+
+== GET /person_data - Retrieve All Person Data ==
+
+C -> RR: GET /person_data
+activate RR
+RR -> AH: get_all_person_data()
+activate AH
+
+AH -> DM: read_all_person_data()
+activate DM
+
+DM -> DM: create_client()
+note right: Creates new tokio_postgres client
+
+DM -> DM: load_sql_config()
+note right: Loads SQL queries from TOML
+
+DM -> DB: SELECT * FROM person_data
+activate DB
+DB -> DM: Vec<Row>
+deactivate DB
+
+DM -> DM: Convert rows to Vec<PersonData>
+note right: Maps each row to PersonData struct
+
+DM -> AH: Result<Vec<PersonData>, Error>
+deactivate DM
+
+alt Success
+    AH -> RR: Json(Ok(Vec<PersonData>))
+    RR -> C: HTTP 200 + JSON Array
+else Error
+    AH -> RR: Json(Err(String))
+    RR -> C: HTTP 200 + JSON Error
+end
+
+deactivate AH
+deactivate RR
+
+== GET /person_data/<id> - Retrieve Specific Person Data ==
+
+C -> RR: GET /person_data/123
+activate RR
+RR -> AH: get_person_data_by_id(123)
+activate AH
+
+AH -> DM: read_person_data_by_id(123)
+activate DM
+
+DM -> DM: create_client()
+note right: Creates new tokio_postgres client
+
+DM -> DM: load_sql_config()
+note right: Loads SQL queries from TOML
+
+DM -> DB: SELECT * FROM person_data WHERE id = $1
+activate DB
+DB -> DM: Vec<Row> (0 or 1 row)
+deactivate DB
+
+alt Person Found
+    DM -> DM: Convert row to PersonData
+    DM -> AH: Result<Some(PersonData), Error>
+else Person Not Found
+    DM -> AH: Result<None, Error>
+end
+
+deactivate DM
+
+alt Success
+    AH -> RR: Json(Ok(Option<PersonData>))
+    RR -> C: HTTP 200 + JSON Object or null
+else Error
+    AH -> RR: Json(Err(String))
+    RR -> C: HTTP 200 + JSON Error
+end
+
+deactivate AH
+deactivate RR
+
+@enduml

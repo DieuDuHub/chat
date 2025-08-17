@@ -1,0 +1,69 @@
+@startuml api_flows
+!theme plain
+title API Flows - Person Data Management
+
+actor Client as C
+participant "Rocket Server" as RS
+participant "Database Module" as DM
+database "PostgreSQL" as DB
+
+== GET /person_data - Retrieve All Person Data ==
+C -> RS: GET /person_data
+activate RS
+RS -> DM: read_all_person_data()
+activate DM
+DM -> DB: create_client()
+activate DB
+DB -> DM: Client
+deactivate DB
+DM -> DB: SELECT * FROM person_data
+activate DB
+DB -> DM: Vec<Row>
+deactivate DB
+DM -> DM: Convert rows to Vec<PersonData>
+DM -> RS: Ok(Vec<PersonData>)
+deactivate DM
+RS -> C: JSON Response with all person data
+deactivate RS
+
+== GET /person_data/<id> - Retrieve Specific Person ==
+C -> RS: GET /person_data/123
+activate RS
+RS -> DM: read_person_data_by_id(123)
+activate DM
+DM -> DB: create_client()
+activate DB
+DB -> DM: Client
+deactivate DB
+DM -> DB: SELECT * FROM person_data WHERE id = $1
+activate DB
+DB -> DM: Option<Row>
+deactivate DB
+alt Person found
+    DM -> DM: Convert row to PersonData
+    DM -> RS: Ok(Some(PersonData))
+else Person not found
+    DM -> RS: Ok(None)
+end
+deactivate DM
+RS -> C: JSON Response with person data or null
+deactivate RS
+
+== Error Handling ==
+note over RS: All endpoints return\nJson<Result<T, String>>\nfor consistent error handling
+
+alt Database Error
+    DM -> RS: Err("Database connection failed")
+    RS -> C: JSON Error Response
+else SQL Error
+    DM -> RS: Err("Query execution failed")
+    RS -> C: JSON Error Response
+else Parse Error
+    DM -> RS: Err("Data parsing failed")
+    RS -> C: JSON Error Response
+end
+
+== Data Structure ==
+note over DM: PersonData {\n  id: i32,\n  first_name: String,\n  last_name: String,\n  email: String,\n  phone: Option<String>,\n  birth_date: Option<NaiveDate>,\n  gender: Option<String>,\n  street_address: Option<String>,\n  city: Option<String>,\n  state_province: Option<String>,\n  postal_code: Option<String>,\n  country: Option<String>,\n  nationality: Option<String>,\n  occupation: Option<String>,\n  company: Option<String>,\n  salary: Option<f64>,\n  marital_status: Option<String>,\n  created_at: Option<DateTime<Utc>>,\n  updated_at: Option<DateTime<Utc>>,\n  is_active: Option<bool>\n}
+
+@enduml

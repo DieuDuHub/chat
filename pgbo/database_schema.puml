@@ -1,0 +1,43 @@
+@startuml database_schema
+!theme plain
+title Database Schema - PostgreSQL Tables
+
+package "Database: md" {
+    entity "person" {
+        * id : SERIAL PRIMARY KEY
+        --
+        * name : TEXT NOT NULL
+        data : BYTEA
+    }
+
+    entity "person_data" {
+        * id : SERIAL PRIMARY KEY
+        --
+        * first_name : VARCHAR(100) NOT NULL
+        * last_name : VARCHAR(100) NOT NULL
+        * email : VARCHAR(255) UNIQUE NOT NULL
+        phone : VARCHAR(20)
+        birth_date : DATE
+        gender : VARCHAR(10)
+        street_address : TEXT
+        city : VARCHAR(100)
+        state_province : VARCHAR(100)
+        postal_code : VARCHAR(20)
+        country : VARCHAR(100)
+        nationality : VARCHAR(100)
+        occupation : VARCHAR(100)
+        company : VARCHAR(200)
+        salary : DECIMAL(10,2)
+        marital_status : VARCHAR(20)
+        * created_at : TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        * updated_at : TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        is_active : BOOLEAN DEFAULT TRUE
+    }
+}
+
+note right of person : Legacy table for\nbasic connectivity tests
+note right of person_data : Complete person\ninformation with\nvalidation constraints
+
+note bottom of person_data : Constraints:\n- email: Valid email format\n- birth_date: Between 1900-01-01 and today\n- updated_at: Auto-updated on modification
+
+@enduml
