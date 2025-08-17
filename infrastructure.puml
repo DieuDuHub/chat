@@ -20,8 +20,10 @@ package "Load Balancer / Reverse Proxy" {
 package "Application Layer" {
     [Rust Backend\n(Rocket)] as RustApp
     [Chat Service\n(SSE)] as ChatService
+    [PersonData API] as PersonAPI
     note right of RustApp : Rocket framework\nAsynchronous handlers\nRESTful API
     note right of ChatService : Server-Sent Events\nReal-time messaging
+    note right of PersonAPI : /person_data endpoints\nJSON responses\nPer-request clients
 }
 
 package "Database Layer" {
@@ -31,6 +33,9 @@ package "Database Layer" {
     component "users table" as UsersTable
     component "messages table" as MessagesTable  
     component "chat_rooms table" as ChatRoomsTable
+    component "person table" as PersonTable
+    component "person_data table" as PersonDataTable
+    note right of PersonDataTable : Comprehensive person info\nEmail validation\nTimestamp tracking
 }
 
 package "Message Queue (Optional)" {
@@ -52,15 +57,19 @@ WebApp --> Nginx : HTTPS
 ' Nginx to backend
 Nginx --> RustApp : HTTP/1.1
 Nginx --> ChatService : WebSocket/SSE
+Nginx --> PersonAPI : HTTP/1.1
 
 ' Backend to database
 RustApp --> PostgresDB : TCP:5432\n(tokio-postgres)
 ChatService --> PostgresDB : TCP:5432
+PersonAPI --> PostgresDB : TCP:5432\n(per-request clients)
 
 ' Database table relations
 PostgresDB --> UsersTable : contains
 PostgresDB --> MessagesTable : contains
 PostgresDB --> ChatRoomsTable : contains
+PostgresDB --> PersonTable : contains
+PostgresDB --> PersonDataTable : contains
 MessagesTable --> UsersTable : user_id FK
 
 ' Optional message queue
