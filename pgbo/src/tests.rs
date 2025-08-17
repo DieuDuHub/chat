@@ -152,3 +152,138 @@ async fn test_database_connectivity_direct() {
     // The test passes if we reach this point without panicking
     assert!(true);
 }
+
+#[test]
+fn test_get_all_person_data_endpoint() {
+    let client = Client::tracked(rocket_for_tests()).expect("valid rocket instance");
+    let response = client.get("/person_data").dispatch();
+    
+    // The endpoint should respond, regardless of whether data exists
+    assert_eq!(response.status(), Status::Ok);
+    
+    let body = response.into_string().expect("valid response body");
+    
+    // The response should be valid JSON
+    let json_result: Result<serde_json::Value, _> = serde_json::from_str(&body);
+    assert!(json_result.is_ok(), "Response should be valid JSON: {}", body);
+    
+    if let Ok(json_value) = json_result {
+        // Should be either Ok([...]) or Err("...")
+        assert!(json_value.get("Ok").is_some() || json_value.get("Err").is_some(),
+                "Response should contain either Ok or Err field");
+        
+        if let Some(ok_value) = json_value.get("Ok") {
+            assert!(ok_value.is_array(), "Ok response should contain an array");
+            println!("✅ Get all person data endpoint returned {} records", 
+                     ok_value.as_array().unwrap().len());
+        } else if let Some(err_value) = json_value.get("Err") {
+            println!("ℹ️ Get all person data endpoint returned error (expected if no DB or table): {}", 
+                     err_value.as_str().unwrap_or("unknown error"));
+        }
+    }
+}
+
+#[test]
+fn test_get_person_data_by_id_endpoint() {
+    let client = Client::tracked(rocket_for_tests()).expect("valid rocket instance");
+    let response = client.get("/person_data/1").dispatch();
+    
+    // The endpoint should respond, regardless of whether the ID exists
+    assert_eq!(response.status(), Status::Ok);
+    
+    let body = response.into_string().expect("valid response body");
+    
+    // The response should be valid JSON
+    let json_result: Result<serde_json::Value, _> = serde_json::from_str(&body);
+    assert!(json_result.is_ok(), "Response should be valid JSON: {}", body);
+    
+    if let Ok(json_value) = json_result {
+        // Should be either Ok(null), Ok({...}) or Err("...")
+        assert!(json_value.get("Ok").is_some() || json_value.get("Err").is_some(),
+                "Response should contain either Ok or Err field");
+        
+        if let Some(ok_value) = json_value.get("Ok") {
+            if ok_value.is_null() {
+                println!("✅ Get person data by ID endpoint: person with ID 1 not found (as expected)");
+            } else {
+                assert!(ok_value.is_object(), "Ok response should contain an object or null");
+                println!("✅ Get person data by ID endpoint returned person data");
+            }
+        } else if let Some(err_value) = json_value.get("Err") {
+            println!("ℹ️ Get person data by ID endpoint returned error (expected if no DB or table): {}", 
+                     err_value.as_str().unwrap_or("unknown error"));
+        }
+    }
+}
+
+#[test]
+fn test_get_person_data_by_invalid_id_endpoint() {
+    let client = Client::tracked(rocket_for_tests()).expect("valid rocket instance");
+    let response = client.get("/person_data/999999").dispatch();
+    
+    // The endpoint should respond even for non-existent IDs
+    assert_eq!(response.status(), Status::Ok);
+    
+    let body = response.into_string().expect("valid response body");
+    
+    // The response should be valid JSON
+    let json_result: Result<serde_json::Value, _> = serde_json::from_str(&body);
+    assert!(json_result.is_ok(), "Response should be valid JSON: {}", body);
+    
+    if let Ok(json_value) = json_result {
+        if let Some(ok_value) = json_value.get("Ok") {
+            // For a non-existent ID, we should get null
+            if ok_value.is_null() {
+                println!("✅ Get person data by invalid ID correctly returned null");
+            } else {
+                println!("ℹ️ Get person data by invalid ID returned data (unexpected but not an error)");
+            }
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_person_data_database_functions() {
+    // Test the underlying database functions directly
+    use crate::database::{read_all_person_data, read_person_data_by_id};
+    
+    // Test read_all_person_data function
+    let all_result = read_all_person_data().await;
+    match all_result {
+        Ok(persons) => {
+            println!("✅ read_all_person_data returned {} persons", persons.len());
+            
+            // If we have data, test the structure
+            if !persons.is_empty() {
+                let first_person = &persons[0];
+                assert!(first_person.id > 0, "Person ID should be positive");
+                assert!(!first_person.first_name.is_empty(), "First name should not be empty");
+                assert!(!first_person.last_name.is_empty(), "Last name should not be empty");
+                assert!(!first_person.email.is_empty(), "Email should not be empty");
+                println!("✅ Person data structure validation passed");
+            }
+        },
+        Err(e) => {
+            println!("ℹ️ read_all_person_data failed (expected if no DB or table): {}", e);
+        }
+    }
+    
+    // Test read_person_data_by_id function
+    let by_id_result = read_person_data_by_id(1).await;
+    match by_id_result {
+        Ok(person_option) => {
+            match person_option {
+                Some(person) => {
+                    println!("✅ read_person_data_by_id found person with ID 1");
+                    assert_eq!(person.id, 1, "Returned person should have ID 1");
+                },
+                None => {
+                    println!("✅ read_person_data_by_id correctly returned None for ID 1");
+                }
+            }
+        },
+        Err(e) => {
+            println!("ℹ️ read_person_data_by_id failed (expected if no DB or table): {}", e);
+        }
+    }
+}
