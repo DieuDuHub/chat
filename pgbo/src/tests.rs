@@ -1,6 +1,6 @@
 use rocket::local::blocking::Client;
 use rocket::http::Status;
-use crate::database::{db_connectivity_test, load_sql_config, create_client};
+use crate::database::{db_connectivity_test, load_sql_config, create_client, get_db_url};
 use crate::rocket_for_tests;
 
 #[test]
@@ -96,7 +96,7 @@ async fn test_create_client_connection() {
             }
         },
         Err(e) => {
-            println!("ℹ️ Database client creation failed (expected if DB not available): {}", e);
+            panic!("ℹ️ Database client creation failed (expected if DB not available): {}", e);
             // This test is allowed to fail if database is not available
             // but we log it for debugging purposes
         }
@@ -146,7 +146,7 @@ async fn test_database_connectivity_direct() {
     // We just want to ensure the function doesn't panic
     match result {
         Ok(_) => println!("Database connectivity test passed"),
-        Err(e) => println!("Database connectivity test failed (expected if no DB): {}", e),
+        Err(e) => panic!("Database connectivity test failed (expected if no DB): {}", e),
     }
     
     // The test passes if we reach this point without panicking
@@ -236,9 +236,13 @@ fn test_get_person_data_by_invalid_id_endpoint() {
             if ok_value.is_null() {
                 println!("✅ Get person data by invalid ID correctly returned null");
             } else {
-                println!("ℹ️ Get person data by invalid ID returned data (unexpected but not an error)");
+                panic!("ℹ️ Get person data by invalid ID returned data (unexpected but not an error)");
             }
         }
+    }
+    else {
+        // If we reach here, the response was not valid JSON
+        panic!("Response was not valid JSON: {}", body);
     }
 }
 
@@ -286,4 +290,39 @@ async fn test_person_data_database_functions() {
             println!("ℹ️ read_person_data_by_id failed (expected if no DB or table): {}", e);
         }
     }
+}
+
+#[test]
+fn test_pgbo_db_env_var_handling() {
+    // Test that get_db_url() correctly handles the PGBO_DB environment variable
+    let db_url = get_db_url();
+    
+    // Check if PGBO_DB environment variable exists
+    match std::env::var("PGBO_DB") {
+        Ok(env_value) => {
+            // If the environment variable exists, get_db_url() should return its value
+            assert_eq!(db_url, env_value);
+            println!("✅ PGBO_DB environment variable exists: '{}'", env_value);
+            println!("✅ get_db_url() correctly returns the environment variable value");
+        },
+        Err(_) => {
+            // If the environment variable doesn't exist, get_db_url() should return the default
+            let expected_default = "host=localhost dbname=md";
+            assert_eq!(db_url, expected_default);
+            panic!("ℹ️ PGBO_DB environment variable not set");
+            //println!("✅ get_db_url() correctly returns default value: '{}'", expected_default);
+        }
+    }
+}
+
+#[test]
+fn test_get_db_url_function() {
+    // Test that get_db_url() function works and returns a non-empty string
+    let db_url = get_db_url();
+    
+    assert!(!db_url.is_empty(), "get_db_url() should never return an empty string");
+    assert!(db_url.contains("host="), "DB URL should contain host parameter");
+    assert!(db_url.contains("dbname="), "DB URL should contain dbname parameter");
+    
+    println!("✅ get_db_url() returns valid database URL: '{}'", db_url);
 }
