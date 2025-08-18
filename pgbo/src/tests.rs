@@ -19,7 +19,7 @@ async fn test_invalid_sql_should_fail() {
         // This should fail because the TOML file doesn't exist or has invalid SQL
         tokio::runtime::Runtime::new().unwrap().block_on(async {
             // Temporarily change the config file to test error handling
-            let original_config = std::fs::read_to_string("pgbo_sql.toml").ok();
+            let original_config = std::fs::read_to_string("conf/pgbo_sql.toml").ok();
             
             // Create invalid SQL config
             let invalid_sql = r#"
@@ -32,13 +32,13 @@ select_all_persons = "SELECT FROM"
 default_name = "Test"
             "#;
             
-            std::fs::write("pgbo_sql.toml", invalid_sql).unwrap();
+            std::fs::write("conf/pgbo_sql.toml", invalid_sql).unwrap();
             
             let result = db_connectivity_test().await;
             
             // Restore original config if it existed
             if let Some(original) = original_config {
-                std::fs::write("pgbo_sql.toml", original).unwrap();
+                std::fs::write("conf/pgbo_sql.toml", original).unwrap();
             }
             
             result
@@ -64,7 +64,7 @@ fn test_config_loading() {
             assert!(!config.data.default_name.is_empty());
         },
         Err(e) => {
-            println!("Config loading failed (expected if pgbo_sql.toml doesn't exist): {}", e);
+            println!("Config loading failed (expected if conf/pgbo_sql.toml doesn't exist): {}", e);
             // This is acceptable for the test - we're just checking the function works
         }
     }

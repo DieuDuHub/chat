@@ -1,6 +1,6 @@
 # PlantUML Documentation - PGBO Project
 
-Ce dossier contient les diagrammes PlantUML qui documentent l'architecture et les flux de l'application Rust/Rocket avec PostgreSQL.
+Ce dossier `docs/` contient les diagrammes PlantUML qui documentent l'architecture et les flux de l'application Rust/Rocket avec PostgreSQL.
 
 ## Diagrammes Disponibles
 
@@ -60,19 +60,20 @@ L'application inclut une suite de tests complète :
 
 ## Génération des Diagrammes
 
-Pour générer les images à partir des fichiers PlantUML :
+Pour générer les images à partir des fichiers PlantUML dans le dossier `docs/` :
 
 ```bash
 # Si vous avez PlantUML installé
+cd docs
 plantuml *.puml
 
-# Ou avec Docker
-docker run --rm -v $(pwd):/work plantuml/plantuml *.puml
+# Ou avec Docker depuis le dossier racine
+docker run --rm -v $(pwd)/docs:/work plantuml/plantuml *.puml
 ```
 
 ## Configuration
 
 L'application utilise :
-- **`pgbo_sql.toml`** - Configuration des requêtes SQL et données de test
+- **`conf/pgbo_sql.toml`** - Configuration des requêtes SQL et données de test
 - **`Cargo.toml`** - Dépendances Rust (Rocket, tokio-postgres, serde, chrono)
 - Variables d'environnement pour la connexion DB (`PGBO_DB`)

@@ -58,7 +58,7 @@ pub struct Data {
 }
 
 pub fn load_sql_config() -> Result<SqlConfig, Box<dyn std::error::Error>> {
-    let config_content = fs::read_to_string("pgbo_sql.toml")?;
+    let config_content = fs::read_to_string("conf/pgbo_sql.toml")?;
     let config: SqlConfig = toml::from_str(&config_content)?;
     Ok(config)
 }

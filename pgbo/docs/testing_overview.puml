@@ -1,0 +1,55 @@
+@startuml testing_overview
+!theme plain
+title Testing Strategy - Rust Application
+
+package "Unit Tests" {
+    [Database Tests] as DBTests
+    [API Tests] as APITests
+    [HTTP Tests] as HTTPTests
+}
+
+package "Integration Tests" {
+    [Database Integration] as DBIntegration
+    [API Integration] as APIIntegration
+}
+
+package "Test Framework" {
+    [Cargo Test] as CargoTest
+    [rocket::local::blocking::Client] as RocketClient
+    [tokio_postgres::Client] as PostgresClient
+}
+
+package "Test Data" {
+    [conf/pgbo_sql.toml] as TestConfig
+}
+
+' Relations
+CargoTest --> DBTests
+CargoTest --> APITests  
+CargoTest --> HTTPTests
+CargoTest --> DBIntegration
+CargoTest --> APIIntegration
+
+DBTests --> PostgresClient
+APITests --> RocketClient
+HTTPTests --> RocketClient
+DBIntegration --> PostgresClient
+APIIntegration --> RocketClient
+
+DBTests --> TestConfig
+APITests --> TestConfig
+DBIntegration --> TestConfig
+
+note right of DBTests : Database Tests:\\n* test_create_client_connection()\\n* test_create_client_strict()\\n* test_db_connectivity()
+
+note right of APITests : API Tests:\\n* test_person_data_endpoints()\\n* test_person_data_by_id_endpoint()\\n* test_person_data_by_id_not_found()
+
+note right of HTTPTests : HTTP Tests:\\n* test_ping_endpoint()\\n* test_index_endpoint()\\n* test_db_connectivity_endpoint()
+
+note right of DBIntegration : Database Integration:\\n* Real PostgreSQL connection\\n* Table creation validation\\n* Data insertion/retrieval
+
+note right of APIIntegration : API Integration:\\n* End-to-end API testing\\n* JSON response validation\\n* Error handling verification
+
+note right of TestConfig : Test Configuration:\\n* SQL queries\\n* Test data\\n* Table schemas
+
+@enduml
