@@ -17,12 +17,16 @@ package "Rocket Web Framework" {
     component "/person_data/<id> endpoint" as PersonDataByIdEndpoint {
         note right: Returns specific PersonData by ID
     }
+    component "POST /person_data endpoint" as CreatePersonDataEndpoint {
+        note right: Creates new PersonData from JSON
+    }
 }
 
 package "Database Layer" {
     [db_connectivity_test()] as DBTest
     [read_all_person_data()] as ReadAllPersonData
     [read_person_data_by_id()] as ReadPersonDataById
+    [create_person_data()] as CreatePersonData
     [create_client()] as CreateClient
     [tokio_postgres Client] as PGClient
     [Connection Handler] as ConnHandler
@@ -31,6 +35,9 @@ package "Database Layer" {
 package "Data Structures" {
     component "PersonData" as PersonDataStruct {
         note right: id: i32\nfirst_name: String\nlast_name: String\nemail: String\nphone: Option<String>\nbirth_date: Option<NaiveDate>\naddress fields...\ntimestamps...
+    }
+    component "CreatePersonData" as CreatePersonDataStruct {
+        note right: Input validation struct\nfirst_name: String\nlast_name: String\nemail: String\nphone: Option<String>\n(no id, timestamps)
     }
     component "SqlConfig" as SqlConfigStruct {
         note right: queries: Queries\ndata: Data
@@ -50,6 +57,8 @@ package "Testing" {
     [test_db_connectivity] as DBTestFunc
     [test_person_data_endpoints] as PersonDataTestFunc
     [test_person_data_by_id_endpoint] as PersonDataByIdTestFunc
+    [test_create_person_data_endpoint] as CreatePersonDataTestFunc
+    [test_create_person_data_database_function] as CreatePersonDataDBTestFunc
     [test_create_client_connection] as CreateClientTestFunc
     [rocket::local::blocking::Client] as TestClient
 }
@@ -60,14 +69,17 @@ Routes --> PingEndpoint
 Routes --> TestEndpoint
 Routes --> PersonDataEndpoint
 Routes --> PersonDataByIdEndpoint
+Routes --> CreatePersonDataEndpoint
 
 TestEndpoint --> DBTest
 PersonDataEndpoint --> ReadAllPersonData
 PersonDataByIdEndpoint --> ReadPersonDataById
+CreatePersonDataEndpoint --> CreatePersonData
 
 DBTest --> CreateClient
 ReadAllPersonData --> CreateClient
 ReadPersonDataById --> CreateClient
+CreatePersonData --> CreateClient
 CreateClient --> PGClient
 CreateClient --> ConnHandler
 
@@ -78,26 +90,35 @@ MDDB --> PersonDataTable
 
 ReadAllPersonData --> PersonDataStruct
 ReadPersonDataById --> PersonDataStruct
+CreatePersonData --> PersonDataStruct
+CreatePersonData --> CreatePersonDataStruct
 DBTest --> SqlConfigStruct
 ReadAllPersonData --> SqlConfigStruct
 ReadPersonDataById --> SqlConfigStruct
+CreatePersonData --> SqlConfigStruct
 
 ' Test relations
 CargoTest --> DBTestFunc
 CargoTest --> PersonDataTestFunc
 CargoTest --> PersonDataByIdTestFunc
+CargoTest --> CreatePersonDataTestFunc
+CargoTest --> CreatePersonDataDBTestFunc
 CargoTest --> CreateClientTestFunc
 DBTestFunc --> TestClient
 PersonDataTestFunc --> TestClient
 PersonDataByIdTestFunc --> TestClient
+CreatePersonDataTestFunc --> TestClient
+CreatePersonDataDBTestFunc --> CreatePersonData
 TestClient --> TestEndpoint
 TestClient --> PersonDataEndpoint
 TestClient --> PersonDataByIdEndpoint
+TestClient --> CreatePersonDataEndpoint
 
 ' Notes
 note right of DBTest : - Create person table\n- Insert "Ferris"\n- Read all data\n- Close connection
 note right of ConnHandler : tokio::spawn to\nhandle async connection
 note right of ReadAllPersonData : - Create client\n- Query all person_data\n- Return Vec<PersonData>
 note right of ReadPersonDataById : - Create client\n- Query by ID\n- Return Option<PersonData>
+note right of CreatePersonData : - Create client\n- INSERT new person_data\n- Return created PersonData
 
 @enduml

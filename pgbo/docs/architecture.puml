@@ -8,7 +8,7 @@ participant "Database Handler" as DH
 database PostgreSQL as DB
 
 == Server Startup ==
-note over RS: rocket::build()\n.mount("/", routes![index, ping,\nget_all_person_data, get_person_data_by_id])
+note over RS: rocket::build()\n.mount("/", routes![index, ping,\nget_all_person_data, get_person_data_by_id,\ncreate_person_data_handler])
 
 == Endpoint /ping ==
 C -> RS: GET /ping
@@ -108,7 +108,37 @@ deactivate DH
 RS -> C: JSON response with specific person data
 deactivate RS
 
+== Endpoint POST /person_data ==
+C -> RS: POST /person_data\n(JSON CreatePersonData)
+activate RS
+note over RS: Rocket validates JSON\nand deserializes to CreatePersonData
+RS -> DH: create_person_data(person_data)
+activate DH
+
+DH -> DB: create_client()
+activate DB
+DB -> DH: client
+deactivate DB
+
+DH -> DB: INSERT INTO person_data\n(first_name, last_name, email, ...)\nVALUES ($1, $2, $3, ...)\nRETURNING *
+activate DB
+
+alt Insert success
+    DB -> DH: New PersonData with generated ID
+    deactivate DB
+    DH -> RS: Json<Result<PersonData, String>>
+    deactivate DH
+    RS -> C: JSON response with created person data
+else Insert failure (e.g., duplicate email)
+    DB -> DH: Error (constraint violation)
+    deactivate DB
+    DH -> RS: Json<Result<_, String>> with error
+    deactivate DH
+    RS -> C: JSON error response
+end
+deactivate RS
+
 == Tests ==
-note over RS: #[cfg(test)]\nComprehensive test suite:\n- test_db_connectivity()\n- test_person_data_endpoints()\n- test_person_data_by_id_endpoint()\n- test_create_client_connection()
+note over RS: #[cfg(test)]\nComprehensive test suite:\n- test_db_connectivity()\n- test_person_data_endpoints()\n- test_person_data_by_id_endpoint()\n- test_create_person_data_endpoint()\n- test_create_person_data_database_function()\n- test_create_client_connection()
 
 @enduml

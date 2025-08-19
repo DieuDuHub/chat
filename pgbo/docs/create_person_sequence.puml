@@ -1,0 +1,55 @@
+@startuml create_person_sequence
+!theme plain
+title Create PersonData API Flow
+
+actor Client
+participant "Rocket Web Server" as Rocket
+participant "create_person_data_handler" as Handler
+participant "create_person_data()" as CreateFunc
+participant "create_client()" as ClientFunc
+participant "tokio_postgres Client" as PGClient
+database "PostgreSQL" as DB
+
+Client -> Rocket: POST /person_data\n(JSON CreatePersonData)
+note right: Content-Type: application/json\n{\n  "first_name": "Jean",\n  "last_name": "Dupont",\n  "email": "jean@test.com",\n  ...\n}
+
+Rocket -> Handler: Route match
+Handler -> Handler: Validate JSON\n(serde deserialization)
+
+alt JSON validation success
+    Handler -> CreateFunc: create_person_data(person_data)
+    CreateFunc -> ClientFunc: create_client()
+    ClientFunc -> PGClient: tokio_postgres::connect()
+    PGClient -> DB: TCP connection
+    DB --> PGClient: Connection established
+    PGClient --> ClientFunc: Client instance
+    ClientFunc --> CreateFunc: Client ready
+    
+    CreateFunc -> CreateFunc: load_sql_config()
+    note right: Load insert_person_data query\nfrom conf/pgbo_sql.toml
+    
+    CreateFunc -> PGClient: client.query(\n  insert_person_data,\n  parameters[]\n)
+    PGClient -> DB: INSERT INTO person_data\n(first_name, last_name, email, ...)\nVALUES ($1, $2, $3, ...)\nRETURNING *
+    
+    alt Insert success
+        DB --> PGClient: New row data with\ngenerated ID and timestamps
+        PGClient --> CreateFunc: Row result
+        CreateFunc -> CreateFunc: Map row to PersonData struct
+        CreateFunc --> Handler: Ok(PersonData)
+        Handler --> Rocket: Json(Ok(PersonData))
+        Rocket --> Client: HTTP 200 OK\n{\n  "Ok": {\n    "id": 1,\n    "first_name": "Jean",\n    "last_name": "Dupont",\n    "email": "jean@test.com",\n    "created_at": "2025-08-19T...",\n    "updated_at": "2025-08-19T...",\n    ...\n  }\n}
+    else Insert failure (e.g., duplicate email)
+        DB --> PGClient: Error: duplicate key constraint
+        PGClient --> CreateFunc: Database error
+        CreateFunc --> Handler: Err(error_message)
+        Handler --> Rocket: Json(Err(error_message))
+        Rocket --> Client: HTTP 200 OK\n{\n  "Err": "Failed to create..."\n}
+    end
+    
+else JSON validation failure
+    Handler --> Rocket: Rocket validation error
+    Rocket --> Client: HTTP 422 Unprocessable Entity
+    note right: Missing required fields or\ninvalid JSON structure
+end
+
+@enduml
