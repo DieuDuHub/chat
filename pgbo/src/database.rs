@@ -52,6 +52,27 @@ pub struct PersonData {
     pub is_active: Option<bool>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreatePersonData {
+    pub first_name: String,
+    pub last_name: String,
+    pub email: String,
+    pub phone: Option<String>,
+    pub birth_date: Option<chrono::NaiveDate>,
+    pub gender: Option<String>,
+    pub street_address: Option<String>,
+    pub city: Option<String>,
+    pub state_province: Option<String>,
+    pub postal_code: Option<String>,
+    pub country: Option<String>,
+    pub nationality: Option<String>,
+    pub occupation: Option<String>,
+    pub company: Option<String>,
+    pub salary: Option<f64>,
+    pub marital_status: Option<String>,
+    pub is_active: Option<bool>,
+}
+
 #[derive(Deserialize)]
 pub struct Data {
     pub default_name: String,
@@ -86,13 +107,18 @@ pub async fn db_connectivity_test_with_new_client() -> Result<(), Box<dyn std::e
     let client = create_client().await?;
     let config = load_sql_config()?;
 
-    // Check if the table exists 
-    let result = client.batch_execute(&config.queries.create_table_person).await;
+    // Check if the tables exist and create them if necessary
+    let result_person = client.batch_execute(&config.queries.create_table_person).await;
+    let result_person_data = client.batch_execute(&config.queries.create_table_person_data).await;
 
-    match result {
-        Ok(_) => println!("Table created or already exists"),
-        Err(e) => {
-            eprintln!("Error with table creation: {}", e);
+    match (result_person, result_person_data) {
+        (Ok(_), Ok(_)) => println!("Tables created or already exist"),
+        (Err(e), _) => {
+            eprintln!("Error with person table creation: {}", e);
+            return Err(e.into());
+        },
+        (_, Err(e)) => {
+            eprintln!("Error with person_data table creation: {}", e);
             return Err(e.into());
         }
     }
@@ -125,13 +151,18 @@ pub async fn db_connectivity_test_with_new_client() -> Result<(), Box<dyn std::e
 pub async fn db_connectivity_test_with_client(client: &Client) -> Result<(), Box<dyn std::error::Error>> {
     let config = load_sql_config()?;
 
-    // Check if the table exists 
-    let result = client.batch_execute(&config.queries.create_table_person).await;
+    // Check if the tables exist and create them if necessary
+    let result_person = client.batch_execute(&config.queries.create_table_person).await;
+    let result_person_data = client.batch_execute(&config.queries.create_table_person_data).await;
 
-    match result {
-        Ok(_) => println!("Table created or already exists"),
-        Err(e) => {
-            eprintln!("Error with table creation: {}", e);
+    match (result_person, result_person_data) {
+        (Ok(_), Ok(_)) => println!("Tables created or already exist"),
+        (Err(e), _) => {
+            eprintln!("Error with person table creation: {}", e);
+            return Err(e.into());
+        },
+        (_, Err(e)) => {
+            eprintln!("Error with person_data table creation: {}", e);
             return Err(e.into());
         }
     }
@@ -245,6 +276,70 @@ pub async fn read_person_data_by_id_with_client(client: &Client, config: &SqlCon
     };
     
     Ok(Some(person))
+}
+
+// Method to create a new person_data record
+pub async fn create_person_data(person_data: CreatePersonData) -> Result<PersonData, Box<dyn std::error::Error>> {
+    let client = create_client().await?;
+    let config = load_sql_config()?;
+    
+    create_person_data_with_client(&client, &config, person_data).await
+}
+
+// Method to create a new person_data record with an existing client
+pub async fn create_person_data_with_client(client: &Client, config: &SqlConfig, person_data: CreatePersonData) -> Result<PersonData, Box<dyn std::error::Error>> {
+    let rows = client.query(
+        &config.queries.insert_person_data,
+        &[
+            &person_data.first_name,
+            &person_data.last_name,
+            &person_data.email,
+            &person_data.phone,
+            &person_data.birth_date,
+            &person_data.gender,
+            &person_data.street_address,
+            &person_data.city,
+            &person_data.state_province,
+            &person_data.postal_code,
+            &person_data.country,
+            &person_data.nationality,
+            &person_data.occupation,
+            &person_data.company,
+            &person_data.salary,
+            &person_data.marital_status,
+            &person_data.is_active.unwrap_or(true),
+        ],
+    ).await?;
+    
+    if rows.is_empty() {
+        return Err("Failed to create person_data: no rows returned".into());
+    }
+    
+    let row = &rows[0];
+    let person = PersonData {
+        id: row.get("id"),
+        first_name: row.get("first_name"),
+        last_name: row.get("last_name"),
+        email: row.get("email"),
+        phone: row.get("phone"),
+        birth_date: row.get("birth_date"),
+        gender: row.get("gender"),
+        street_address: row.get("street_address"),
+        city: row.get("city"),
+        state_province: row.get("state_province"),
+        postal_code: row.get("postal_code"),
+        country: row.get("country"),
+        nationality: row.get("nationality"),
+        occupation: row.get("occupation"),
+        company: row.get("company"),
+        salary: row.get("salary"),
+        marital_status: row.get("marital_status"),
+        created_at: row.get("created_at"),
+        updated_at: row.get("updated_at"),
+        is_active: row.get("is_active"),
+    };
+    
+    Ok(person)
 }
 
 // Legacy function for backward compatibility and tests

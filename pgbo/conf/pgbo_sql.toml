@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS person_data (
     email           VARCHAR(255) UNIQUE NOT NULL,
     phone           VARCHAR(20),
     birth_date      DATE,
-    gender          VARCHAR(10) CHECK (gender IN ('Male', 'Female', 'Other', 'Prefer not to say')),
+    gender          VARCHAR(10) CHECK (gender IN ('M', 'F', 'Male', 'Female', 'Other', 'Prefer not to say')),
     
     -- Address fields
     street_address  VARCHAR(255),
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS person_data (
     nationality     VARCHAR(100),
     occupation      VARCHAR(150),
     company         VARCHAR(200),
-    salary          DECIMAL(12,2),
+    salary          DOUBLE PRECISION,
     marital_status  VARCHAR(20) CHECK (marital_status IN ('Single', 'Married', 'Divorced', 'Widowed', 'Other')),
     
     -- System fields
@@ -47,8 +47,9 @@ insert_person = "INSERT INTO person (name, data) VALUES ($1, $2)"
 
 insert_person_data = """
 INSERT INTO person_data 
-(first_name, last_name, email, phone, birth_date, gender, street_address, city, state_province, postal_code, country, nationality, occupation, company, salary, marital_status) 
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+(first_name, last_name, email, phone, birth_date, gender, street_address, city, state_province, postal_code, country, nationality, occupation, company, salary, marital_status, is_active) 
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+RETURNING id, first_name, last_name, email, phone, birth_date, gender, street_address, city, state_province, postal_code, country, nationality, occupation, company, salary, marital_status, created_at, updated_at, is_active
 """
 
 select_all_persons = "SELECT id, name, data FROM person"

@@ -6,7 +6,7 @@ mod database;
 #[cfg(test)]
 mod tests;
 
-use database::{db_connectivity_test_with_new_client, get_db_url, read_all_person_data, read_person_data_by_id, PersonData};
+use database::{db_connectivity_test_with_new_client, get_db_url, read_all_person_data, read_person_data_by_id, create_person_data, PersonData, CreatePersonData};
 
 #[get("/test")]
 async fn ping() -> &'static str {
@@ -57,6 +57,17 @@ async fn get_person_data_by_id(id: i32) -> Json<Result<Option<PersonData>, Strin
     }
 }
 
+#[post("/person_data", data = "<person_data>")]
+async fn create_person_data_handler(person_data: Json<CreatePersonData>) -> Json<Result<PersonData, String>> {
+    match create_person_data(person_data.into_inner()).await {
+        Ok(person) => Json(Ok(person)),
+        Err(e) => {
+            eprintln!("Failed to create person data: {}", e);
+            Json(Err(format!("Failed to create person data: {}", e)))
+        }
+    }
+}
+
 #[launch]
 async fn rocket() -> _ {
     // Test database connectivity at startup
@@ -80,7 +91,7 @@ async fn rocket() -> _ {
     };
 
     rocket::build()
-        .mount("/", routes![index, ping, get_all_person_data, get_person_data_by_id])
+        .mount("/", routes![index, ping, get_all_person_data, get_person_data_by_id, create_person_data_handler])
 }
 
 // Helper function for tests
@@ -104,5 +115,5 @@ pub fn rocket_for_tests() -> rocket::Rocket<rocket::Build> {
     }
 
     rocket::build()
-        .mount("/", routes![index, test_ping, get_all_person_data, get_person_data_by_id])
+        .mount("/", routes![index, test_ping, get_all_person_data, get_person_data_by_id, create_person_data_handler])
 }   
