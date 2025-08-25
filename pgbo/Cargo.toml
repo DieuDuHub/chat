@@ -1,7 +1,11 @@
 [package]
 name = "pgbo"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+
+[[bin]]
+name = "pgbo"
+path = "src/main.rs"
 
 [dependencies]
 

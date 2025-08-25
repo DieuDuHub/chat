@@ -10,7 +10,7 @@ cd /Users/matthieudebray/dev/rust/chat/pgbo
 cargo run
 ```
 
-2. Le serveur écoute sur `http://localhost:8000`
+2. Le serveur écoute sur `http://localhost:8001`
 
 ## Endpoints disponibles
 
@@ -18,7 +18,7 @@ cargo run
 **GET** `/ping`
 
 ```bash
-curl http://localhost:8000/ping
+curl http://localhost:8001/ping
 ```
 
 **Réponse attendue :**
@@ -30,7 +30,7 @@ alive
 **GET** `/test`
 
 ```bash
-curl http://localhost:8000/test
+curl http://localhost:8001/test
 ```
 
 **Réponse attendue :**
@@ -42,7 +42,7 @@ Database connectivity test passed
 **GET** `/person_data`
 
 ```bash
-curl http://localhost:8000/person_data
+curl http://localhost:8001/person_data
 ```
 
 **Réponse attendue :**
@@ -80,10 +80,10 @@ curl http://localhost:8000/person_data
 
 ```bash
 # Lire la personne avec ID 1
-curl http://localhost:8000/person_data/1
+curl http://localhost:8001/person_data/1
 
 # Lire une personne inexistante
-curl http://localhost:8000/person_data/999
+curl http://localhost:8001/person_data/999
 ```
 
 **Réponse attendue (personne trouvée) :**
@@ -127,7 +127,7 @@ curl http://localhost:8000/person_data/999
 #### 5.1 Création avec données complètes
 
 ```bash
-curl -X POST http://localhost:8000/person_data \
+curl -X POST http://localhost:8001/person_data \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "Jean",
@@ -152,7 +152,7 @@ curl -X POST http://localhost:8000/person_data \
 #### 5.2 Création avec données minimales
 
 ```bash
-curl -X POST http://localhost:8000/person_data \
+curl -X POST http://localhost:8001/person_data \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "Marie",
@@ -164,7 +164,7 @@ curl -X POST http://localhost:8000/person_data \
 #### 5.3 Création d'une deuxième personne
 
 ```bash
-curl -X POST http://localhost:8000/person_data \
+curl -X POST http://localhost:8001/person_data \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "Marie",
@@ -219,7 +219,7 @@ curl -X POST http://localhost:8000/person_data \
 ### 1. JSON invalide
 
 ```bash
-curl -X POST http://localhost:8000/person_data \
+curl -X POST http://localhost:8001/person_data \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "Jean",
@@ -233,7 +233,7 @@ curl -X POST http://localhost:8000/person_data \
 ### 2. Champs manquants
 
 ```bash
-curl -X POST http://localhost:8000/person_data \
+curl -X POST http://localhost:8001/person_data \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "Jean"
@@ -246,7 +246,7 @@ curl -X POST http://localhost:8000/person_data \
 
 ```bash
 # Créer la première personne
-curl -X POST http://localhost:8000/person_data \
+curl -X POST http://localhost:8001/person_data \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "Jean",
@@ -255,7 +255,7 @@ curl -X POST http://localhost:8000/person_data \
   }'
 
 # Tenter de créer une personne avec le même email
-curl -X POST http://localhost:8000/person_data \
+curl -X POST http://localhost:8001/person_data \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "Pierre",
@@ -277,10 +277,10 @@ Pour une meilleure lisibilité des réponses JSON, utilisez `jq` :
 
 ```bash
 # Lire toutes les personnes avec formatage
-curl http://localhost:8000/person_data | jq
+curl http://localhost:8001/person_data | jq
 
 # Créer une personne avec formatage
-curl -X POST http://localhost:8000/person_data \
+curl -X POST http://localhost:8001/person_data \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "Alice",
@@ -299,13 +299,13 @@ cargo run &
 sleep 3
 
 # 3. Test de connectivité
-curl http://localhost:8000/ping
+curl http://localhost:8001/ping
 
 # 4. Initialiser les tables
-curl http://localhost:8000/test
+curl http://localhost:8001/test
 
 # 5. Créer des personnes
-curl -X POST http://localhost:8000/person_data \
+curl -X POST http://localhost:8001/person_data \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "Jean",
@@ -313,7 +313,7 @@ curl -X POST http://localhost:8000/person_data \
     "email": "jean.dupont@test.com"
   }'
 
-curl -X POST http://localhost:8000/person_data \
+curl -X POST http://localhost:8001/person_data \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "Marie",
@@ -322,10 +322,10 @@ curl -X POST http://localhost:8000/person_data \
   }'
 
 # 6. Lire toutes les personnes
-curl http://localhost:8000/person_data | jq
+curl http://localhost:8001/person_data | jq
 
 # 7. Lire une personne spécifique
-curl http://localhost:8000/person_data/1 | jq
+curl http://localhost:8001/person_data/1 | jq
 
 # 8. Arrêter le serveur
 kill %1

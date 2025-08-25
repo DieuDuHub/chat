@@ -6,6 +6,7 @@ import {
 } from "@react-navigation/native";
 import Webs from "./components/webs";
 import WebPost from "./components/webpost";
+import PersonDataList from "./components/PersonDataList";
 import { Heading } from "../components/ui/heading"
 import { Button, ButtonText } from "@/components/ui/button"
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
@@ -15,7 +16,7 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 //A ARCHIMATE : Web Site React-Native for Chat purpose using SSE
 import "../global.css";
 
-export default  function Index() {
+export default function Index() {
   return (
        <GluestackUIProvider >
          <ThemeProvider value={DefaultTheme}>
@@ -33,6 +34,9 @@ export default  function Index() {
             <Button size="md" variant="outline" action="primary">
       <ButtonText>Hello World!</ButtonText>
     </Button>
+    <View>
+      <PersonDataList />
+    </View>
       </View>
     </View>
     </ThemeProvider>

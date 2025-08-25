@@ -23,6 +23,15 @@ http {
             proxy_pass http://host.docker.internal:8000;
             proxy_redirect default;
         }
+        location /referential {
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            proxy_buffering off;
+            access_log on;
+            include proxy_params;
+            proxy_pass http://host.docker.internal:8001/;
+            proxy_redirect default;
+        }
         location / {
             access_log on;
             include proxy_params;
